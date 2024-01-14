@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Calculator</title>
+    <style>
+        
+    </style>
+</head>
+<body>
+    <h1>Options Calculator</h1>
+    <form action="/calculate" method="post">
+        <label for="spot_price">Spot Price:</label>
+        <input type="number" name="spot_price" required><br>
+        
+        <label for="strike">Strike Price:</label>
+        <input type="number" name="strike" required><br>
+        
+        <label for="time_to_expiration">Time to Expiration (in years):</label>
+        <input type="number" name="time_to_expiration" step="0.01" required><br>
+        
+        <label for="volatility">Volatility:</label>
+        <input type="number" name="volatility" step="0.01" required><br>
+        
+        <label for="interest_rate">Interest Rate:</label>
+        <input type="number" name="interest_rate" step="0.01" required><br>
+        
+        <label for="dividend_yield">Dividend Yield:</label>
+        <input type="number" name="dividend_yield" step="0.01" required><br>
+        
+        <label for="option_type">Option Type:</label>
+        <input type="radio" name="option_type" value="call" checked> Call
+        <input type="radio" name="option_type" value="put"> Put<br>
+
+        <input type="submit" value="Calculate">
+
+    </form>
+
+    {% if options_price is not none %}
+    <p>Options Price: {{ options_price }}</p>
+    {% endif %}
+
+</body>
+</html>

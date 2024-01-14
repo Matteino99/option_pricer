@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Calculator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 400px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        input,
+        select {
+            width: calc(100% - 16px);
+            padding: 8px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="submit"] {
+            background-color: #f80303;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #f80303;
+        }
+
+        p {
+            margin-top: 20px;
+            color: #333;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Options Calculator</h1>
+        <form action="/calculate" method="post">
+            <label for="spot_price">Spot Price:</label>
+            <input type="number" name="spot_price" required>
+
+            <label for="strike">Strike Price:</label>
+            <input type="number" name="strike" required>
+
+            <label for="time_to_expiration">Time to Expiration (in years):</label>
+            <input type="number" name="time_to_expiration" step="0.01" required>
+
+            <label for="volatility">Volatility:</label>
+            <input type="number" name="volatility" step="0.01" required>
+
+            <label for="interest_rate">Interest Rate:</label>
+            <input type="number" name="interest_rate" step="0.01" required>
+
+            <label for="dividend_yield">Dividend Yield:</label>
+            <input type="number" name="dividend_yield" step="0.01" required>
+
+            <label for="option_type">Option Type:</label>
+            <select name="option_type" required>
+                <option value="call">Call</option>
+                <option value="put">Put</option>
+            </select>
+
+            <input type="submit" value="Calculate">
+        </form>
+
+        {% if options_price is not none %}
+        <p>Options Price: {{ options_price }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>
