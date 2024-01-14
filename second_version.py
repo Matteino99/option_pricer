@@ -85,7 +85,7 @@ def calculate():
         total_rho += rho
         
         
-    return render_template('result2.html', total_price=round(total_price,4), total_delta=round(total_delta,4), total_gamma=round(total_gamma,4), total_vega=round(total_vega,4), total_theta=round(total_theta,4), total_rho=round(total_rho,4))
+    return render_template('result2.html', total_price=round(total_price,4), total_delta=round(total_delta,4), total_gamma=round(total_gamma,4), total_vega=round(total_vega,4), total_theta=round(total_theta,4), total_pho=round(total_rho,4))
 
 if __name__ == '__main__':
     app.run(debug=True, port=8005)
