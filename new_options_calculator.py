@@ -27,7 +27,7 @@ def calculate_options_price(spot_price, strike, time_to_expiration, volatility, 
         gamma = norm.pdf(d1, 0, 1) / (spot_price * volatility * np.sqrt(time_to_expiration))
         vega = spot_price * norm.pdf(d1, 0, 1) * np.sqrt(time_to_expiration) * 0.01 #vega for 1% change in volatility
         theta = (-spot_price * norm.pdf(d1, 0, 1) * volatility / (2 * np.sqrt(time_to_expiration)) - interest_rate * strike *np.exp(-interest_rate * time_to_expiration) * norm.cdf(d2, 0, 1))/365 #theta in days
-        rho = strike * time_to_expiration * np.exp(-interest_rate * time_to_expiration) * norm.cdf(d2, 0, 1)
+        rho = (strike * time_to_expiration * np.exp(-interest_rate * time_to_expiration) * norm.cdf(d2, 0, 1))*0.01
         
     else:
         price = strike * math.exp(-interest_rate * time_to_expiration) * norm.cdf(-d2) - spot_price * math.exp(-dividend_yield * time_to_expiration) * norm.cdf(-d1) 
@@ -35,7 +35,7 @@ def calculate_options_price(spot_price, strike, time_to_expiration, volatility, 
         gamma = norm.pdf(d1, 0, 1) / (spot_price * volatility * np.sqrt(time_to_expiration))
         vega = spot_price * norm.pdf(d1, 0, 1) * np.sqrt(time_to_expiration) * 0.01 #vega for 1% change in volatility
         theta = (-spot_price * norm.pdf(d1, 0, 1) * volatility / (2 * np.sqrt(time_to_expiration)) + interest_rate * strike *np.exp(-interest_rate * time_to_expiration) * norm.cdf(-d2, 0, 1))/365 #theta in days
-        rho = -strike * time_to_expiration * np.exp(-interest_rate * time_to_expiration) * norm.cdf(-d2, 0, 1)
+        rho = (-strike * time_to_expiration * np.exp(-interest_rate * time_to_expiration) * norm.cdf(-d2, 0, 1))*0.01
         
     print("Options Price:", price)
     print("Options delta:", delta)
