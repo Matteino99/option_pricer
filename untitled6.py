@@ -3,7 +3,7 @@ import numpy as np
 import math
 import os
 from scipy.stats import norm
-from waitress import serve
+#from waitress import serve
 from tutte_le_opzioni import calculate_options_price, binomial_european_option, binomial_american_option, barrier_option_pricer, digital_pricer
 
 app = Flask(__name__, template_folder='templates')

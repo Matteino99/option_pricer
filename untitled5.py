@@ -1,18 +1,10 @@
 import math
-import numpy as np
 from scipy.stats import norm
-
+import numpy as np
 
 def calculate_options_price(spot_price, strike, time_to_expiration, volatility, interest_rate, dividend_yield, option_type):
 
-    print("Spot Price:", spot_price)
-    print("Strike:", strike)
-    print("Time to Expiration:", time_to_expiration)
-    print("Volatility:", volatility)
-    print("Interest Rate:", interest_rate)
-    print("Dividend Yield:", dividend_yield)
-    print("Option Type:", option_type)
-  
+
     d1 = (math.log(spot_price / strike) + (interest_rate - dividend_yield + (volatility ** 2) / 2) * time_to_expiration) / (volatility * math.sqrt(time_to_expiration))
     d2 = d1 - volatility * math.sqrt(time_to_expiration)
     
@@ -32,71 +24,75 @@ def calculate_options_price(spot_price, strike, time_to_expiration, volatility, 
         theta = (-spot_price * norm.pdf(d1, 0, 1) * volatility / (2 * np.sqrt(time_to_expiration)) + interest_rate * strike * np.exp(-interest_rate * time_to_expiration) * norm.cdf(-d2, 0, 1))/256 #theta in days
         rho = (-strike * time_to_expiration * np.exp(-interest_rate * time_to_expiration) * norm.cdf(-d2, 0, 1)) * 0.01
 
-    return price, delta, gamma, vega, theta, rho        
+    return price, delta, gamma, vega, theta, rho
 
 
-def digital_pricer(spot_price, strike, coupon, time_to_expiration, volatility, interest_rate, dividend_yield, barrier_shift, width_adjustment, option_type, options_style):
+
+def barrier_continous_pricer(spot_price, strike, barrier, rebate, time_to_expiration, volatility, interest_rate, dividend_yield, option_type, barrier_type, observation):
     """
-    Calculate digital option price and theoretical price.
+    Calculate the price of continuous barrier options.
 
     Parameters:
     - spot_price (float): Current spot price.
     - strike (float): Option strike price.
-    - coupon (float): Coupon value.
+    - barrier (float): Barrier level.
+    - rebate (float): Rebate amount.
     - time_to_expiration (float): Time to option expiration in years.
     - volatility (float): Annual volatility of the underlying asset.
     - interest_rate (float): Annual risk-free interest rate.
     - dividend_yield (float): Annual dividend yield.
-    - barrier_shift (float): Shift in the barrier (if applicable).
     - option_type (str): "call" for call option, "put" for put option.
-    - options_style (str): "european" or other style.
+    - barrier_type (str): "in" for in-barrier, "out" for out-barrier.
+    - observation (int): Number of observations.
 
     Returns:
-    - digital_price (float): Calculated digital option price.
-    - theo_price (float): Theoretical option price.
+    - option_price (float): Calculated option price.
     """
-    d1 = (math.log(spot_price / strike) + (interest_rate - dividend_yield + (volatility ** 2) / 2) * time_to_expiration) / (volatility * math.sqrt(time_to_expiration))
-    d2 = d1 - volatility * math.sqrt(time_to_expiration)
 
-    if option_type == "call":
-        spot1 = spot_price - coupon / 2 + barrier_shift + width_adjustment
-        price1 = calculate_options_price(spot1, strike, time_to_expiration, volatility, interest_rate, dividend_yield, "call")[0]
-        spot2 = spot_price + coupon / 2 + barrier_shift - width_adjustment
-        price2 = calculate_options_price(spot2, strike, time_to_expiration, volatility, interest_rate, dividend_yield, "call")[0]
+    # Constants
+    lambdaa = (interest_rate - dividend_yield + ((volatility**2) / 2)) / volatility**2
+    sqrt_time = volatility * math.sqrt(time_to_expiration)
+    y = (math.log((barrier**2) / (strike * spot_price)) / sqrt_time) + lambdaa * sqrt_time
+    x1 = (math.log(strike / barrier) / sqrt_time) + lambdaa * sqrt_time
+    y1 = (math.log(barrier / spot_price) / sqrt_time) + lambdaa * sqrt_time
 
-        if options_style == "european":
-            digital_price = np.subtract(price2, price1)
-            theo_price = coupon * norm.cdf(d2, 0, 1) * math.exp(-interest_rate * time_to_expiration)
+    # Function for option calculation
+    def calculate_option_price(x, y, x1, y1, barrier_ratio, barrier_option_multiplier):
+        return barrier_option_multiplier * (
+            x * norm.cdf(x1, 0, 1) * math.exp(-dividend_yield * time_to_expiration)
+            - strike * math.exp(-interest_rate * time_to_expiration) * norm.cdf(x1 - sqrt_time, 0, 1)
+            - spot_price * math.exp(-dividend_yield * time_to_expiration) * (barrier_ratio**(2 * lambdaa))
+            * (norm.cdf(-y, 0, 1) - norm.cdf(-y1, 0, 1))
+            + strike * math.exp(-interest_rate * time_to_expiration) * (barrier_ratio**((2 * lambdaa) - 2))
+            * (norm.cdf(-y + sqrt_time, 0, 1) - norm.cdf(-y1 + sqrt_time, 0, 1))
+        )
+
+    # Main logic
+    if observation == 0:
+        if option_type == "call":
+            barrier_option_price = calculate_option_price(x1, y, x1 - sqrt_time, y1, barrier / spot_price, 1)
+            if barrier_type == "out":
+                barrier_option_price = calculate_option_price(x1, y, x1 - sqrt_time, y1, barrier / spot_price, 1)
+                barrier_option_price = calculate_options_price(spot_price, strike, time_to_expiration, volatility, interest_rate, dividend_yield, option_type)[0] - barrier_option_price
         else:
-            digital_price = np.subtract(price2, price1) * 2  # due to reflection principle
-            theo_price = coupon * norm.cdf(d2, 0, 1) * math.exp(-interest_rate * time_to_expiration) * 2
-
+            barrier_option_price = calculate_option_price(-x1, -y, -x1 + sqrt_time, -y1, barrier / spot_price, -1)
+            if barrier_type == "out":
+                barrier_option_price = calculate_option_price(-x1, -y, -x1 + sqrt_time, -y1, barrier / spot_price, -1)
+                barrier_option_price = calculate_options_price(spot_price, strike, time_to_expiration, volatility, interest_rate, dividend_yield, option_type)[0] - barrier_option_price
     else:
-        spot1 = spot_price + coupon / 2
-        price1 = calculate_options_price(spot1, strike, time_to_expiration, volatility, interest_rate, dividend_yield, "put")[0]
-        spot2 = spot_price - coupon / 2
-        price2 = calculate_options_price(spot2, strike, time_to_expiration, volatility, interest_rate, dividend_yield, "put")[0]
-
-        if options_style == "european":
-            digital_price = np.subtract(price2, price1)
-            theo_price = coupon * norm.cdf(-d1, 0, 1) * math.exp(-interest_rate * time_to_expiration)
+        if option_type == "call":
+            barrier_ratio = barrier * math.exp(-0.5826 * volatility * math.sqrt(time_to_expiration / observation)) if barrier_type == "in" else barrier * math.exp(0.5826 * volatility * math.sqrt(time_to_expiration / observation))
         else:
-            digital_price = np.subtract(price2, price1) * 2  # due to reflection principle
-            theo_price = coupon * norm.cdf(-d1, 0, 1) * math.exp(-interest_rate * time_to_expiration) * 2
+            barrier_ratio = barrier * math.exp(0.5826 * volatility * math.sqrt(time_to_expiration / observation)) if barrier_type == "in" else barrier * math.exp(-0.5826 * volatility * math.sqrt(time_to_expiration / observation))
 
-    return digital_price, theo_price
+        barrier_option_price = calculate_option_price(x1, y, x1 - sqrt_time, y1, barrier_ratio, 1)
 
-       
-d1 = (math.log(100 / 110) + (0.03  + (0.2 ** 2) / 2) * 0.5) / (0.2 * math.sqrt(0.5))
-d2 = d1 - 0.2 * math.sqrt(0.5) 
-X=digital_pricer(100, 110, 10, 0.5, 0.2, 0.03, 0, 0,0, "call", "american")
-Y= 10 * norm.cdf(d2, 0, 1)*math.exp(-0.03 * 0.5)*2
-print(Y)
-print(X)
+    return barrier_option_price
 
-#THIS CODE IS VALIDE ONLY FOR REVERSE BARRIER UP CALL AND DOWN PUT
 
-def barrier_continous_pricer(spot_price, strike, barrier, rebate, time_to_expiration, volatility, interest_rate, dividend_yield, option_type, barrier_type, observation ):
+
+
+def barrier_continous_pricer_new(spot_price, strike, barrier, rebate, time_to_expiration, volatility, interest_rate, dividend_yield, option_type, barrier_type, observation ):
     """
     Calculate the price of continuous barrier options.
 
@@ -180,6 +176,8 @@ def barrier_continous_pricer(spot_price, strike, barrier, rebate, time_to_expira
 
     return barrier_option_price
 
-pra = barrier_continous_pricer(100, 100, 80, 0, 1, 0.3, 0.02, 0, "put", "0ut", 1 )
-    
-print(pra)
+pra = barrier_continous_pricer(100, 100, 80, 0, 1, 0.3, 0.02, 0, "put", "out", 1 )
+pra2 = barrier_continous_pricer_new(100, 100, 80, 0, 1, 0.3, 0.02, 0, "put", "out", 1 )
+print(pra,pra2)
+
+

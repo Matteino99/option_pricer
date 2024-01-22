@@ -13,7 +13,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            height: auto;
         }
 
         .container {
@@ -45,7 +45,7 @@
         select {
             width: calc(100% - 16px);
             padding: 8px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             box-sizing: border-box;
             border: 1px solid #ccc;
             border-radius: 4px;
@@ -68,42 +68,33 @@
             color: #333;
             font-size: 16px;
         }
-    </style>
+    </style>    
 </head>
 <body>
     <div class="container">
-        <h1>Options Calculator</h1>
-        <form action="/calculate" method="post">
-            <label for="spot_price">Spot Price:</label>
-            <input type="number" name="spot_price" step="0.01" required>
-
-            <label for="strike">Strike Price:</label>
-            <input type="number" name="strike" step="0.01" required>
-
-            <label for="time_to_expiration">Time to Expiration (in years):</label>
-            <input type="number" name="time_to_expiration" step="0.01" required>
-
-            <label for="volatility">Volatility:</label>
-            <input type="number" name="volatility" step="0.01" required>
-
-            <label for="interest_rate">Interest Rate:</label>
-            <input type="number" name="interest_rate" step="0.01" required>
-
-            <label for="dividend_yield">Dividend Yield:</label>
-            <input type="number" name="dividend_yield" step="0.01" required>
-
-            <label for="option_type">Option Type:</label>
-            <select name="option_type" required>
-                <option value="call">Call</option>
-                <option value="put">Put</option>
+        <h1>Select Option's Number</h1>
+        <form action="/select_options_input" method="post">
+            <label for="num_options">Options' Number:</label>
+            <select name="num_options" id="num_options">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
             </select>
 
-            <input type="submit" value="Calculate">
-        </form>
+            <label for="option_category">Options' Category:</label>
+            <select name="option_category" id="option_category">
+                <option value="European_BS">European_BS</option>
+                <option value="European_binomial">European_binomial</option>
+                <option value="American_binomial">American_binomial</option>
+                <option value="Barrier">Barrier</option>
+                <option value="Digital">Digital</option>
+            </select>
 
-        {% if options_price is not none %}
-        <p>Options Price: {{ options_price }}</p>
-        {% endif %}
+            <input type="submit" value="Select">
+        </form>
     </div>
 </body>
 </html>

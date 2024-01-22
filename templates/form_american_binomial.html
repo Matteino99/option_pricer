@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Options Calculator</title>
+    <title>Options Calculator - American (Binomial)</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -68,24 +68,23 @@
             color: #333;
             font-size: 16px;
         }
-    </style>  
+</style>
 </head>
 <body>
     <div class="container">
-        <h1>Insert Options' details</h1>
+        <h1>American (Binomial) Option Details</h1>
         <form action="/calculate" method="post">
             <input type="hidden" name="num_options" value="{{ num_options }}">
-             
             {% for i in range(1, num_options + 1) %}
+            <input type="hidden" name="option_category" value="American_binomial">
                 <div class="option-inputs">
-                    
                     <label for="spot_price{{i}}">Spot Price {{i}}:</label>
                     <input type="number" name="spot_price{{i}}" step="0.01" required>
 
                     <label for="strike{{i}}">Strike Price {{i}}:</label>
                     <input type="number" name="strike{{i}}" step="0.01" required>
 
-                    <label for="time_to_expiration{{i}}">Time to Expiration {{i}}:</label>
+                    <label for="time_to_expiration{{i}}">Time to Expiration (in years) {{i}}:</label>
                     <input type="number" name="time_to_expiration{{i}}" step="0.01" required>
 
                     <label for="volatility{{i}}">Volatility {{i}}:</label>
@@ -97,14 +96,23 @@
                     <label for="dividend_yield{{i}}">Dividend Yield {{i}}:</label>
                     <input type="number" name="dividend_yield{{i}}" step="0.01" required>
 
+                    <label for="num_steps{{i}}">Number of Steps {{i}}:</label>
+                    <input type="number" name="num_steps{{i}}" step="0.01" required>
+
+                    <label for="up_factor{{i}}">Up Factor {{i}}:</label>
+                    <input type="number" name="up_factor{{i}}" step="0.01" required>
+
+                    <label for="down_factor{{i}}">Down Factor {{i}}:</label>
+                    <input type="number" name="down_factor{{i}}" step="0.01" required>
+
                     <label for="option_type{{i}}">Option Type {{i}}:</label>
                     <select name="option_type{{i}}" required>
                         <option value="call">Call</option>
-                        <option value="put">Put</option>
+                        <option value="put">Put</option>\
                     </select>
-                </div>
             {% endfor %}
-            <input type="submit" value="Calcola">
+                </div>
+            <input type="submit" value="Calculate">
         </form>
     </div>
 </body>

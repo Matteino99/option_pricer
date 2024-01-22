@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Options Calculator</title>
+    <title>Options Calculator - Digital</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -68,24 +68,23 @@
             color: #333;
             font-size: 16px;
         }
-    </style>  
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Insert Options' details</h1>
+        <h1>Digital Option Details</h1>
         <form action="/calculate" method="post">
             <input type="hidden" name="num_options" value="{{ num_options }}">
-             
             {% for i in range(1, num_options + 1) %}
+            <input type="hidden" name="option_category" value="Digital">
                 <div class="option-inputs">
-                    
                     <label for="spot_price{{i}}">Spot Price {{i}}:</label>
                     <input type="number" name="spot_price{{i}}" step="0.01" required>
 
                     <label for="strike{{i}}">Strike Price {{i}}:</label>
                     <input type="number" name="strike{{i}}" step="0.01" required>
 
-                    <label for="time_to_expiration{{i}}">Time to Expiration {{i}}:</label>
+                    <label for="time_to_expiration{{i}}">Time to Expiration (in years){{i}}:</label>
                     <input type="number" name="time_to_expiration{{i}}" step="0.01" required>
 
                     <label for="volatility{{i}}">Volatility {{i}}:</label>
@@ -97,14 +96,26 @@
                     <label for="dividend_yield{{i}}">Dividend Yield {{i}}:</label>
                     <input type="number" name="dividend_yield{{i}}" step="0.01" required>
 
+                    <label for="coupon{{i}}">Coupon {{i}}:</label>
+                    <input type="number" name="coupon{{i}}" step="0.01" required>
+
+                    <label for="barrier_shift{{i}}">Barrier Shift {{i}}:</label>
+                    <input type="number" name="barrier_shift{{i}}" step="0.01" required>
+
                     <label for="option_type{{i}}">Option Type {{i}}:</label>
                     <select name="option_type{{i}}" required>
                         <option value="call">Call</option>
-                        <option value="put">Put</option>
+                        <option value="put">Put</option>\
+                    </select>
+
+                    <label for="options_style{{i}}">Options Style {{i}}:</label>
+                    <select name="options_style{{i}}" required>
+                        <option value="european">European</option>
+                        <option value="american">American</option>\
                     </select>
                 </div>
             {% endfor %}
-            <input type="submit" value="Calcola">
+            <input type="submit" value="Calculate">
         </form>
     </div>
 </body>

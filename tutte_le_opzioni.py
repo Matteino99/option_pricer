@@ -35,7 +35,9 @@ def calculate_options_price(spot_price, strike, time_to_expiration, volatility, 
     return price, delta, gamma, vega, theta, rho        
 
 
-def digital_pricer(spot_price, strike, coupon, time_to_expiration, volatility, interest_rate, dividend_yield, barrier_shift, width_adjustment, option_type, options_style):
+
+
+def digital_pricer(spot_price, strike, coupon, time_to_expiration, volatility, interest_rate, dividend_yield, barrier_shift, option_type, options_style):
     """
     Calculate digital option price and theoretical price.
 
@@ -59,9 +61,9 @@ def digital_pricer(spot_price, strike, coupon, time_to_expiration, volatility, i
     d2 = d1 - volatility * math.sqrt(time_to_expiration)
 
     if option_type == "call":
-        spot1 = spot_price - coupon / 2 + barrier_shift + width_adjustment
+        spot1 = spot_price - coupon / 2 + barrier_shift 
         price1 = calculate_options_price(spot1, strike, time_to_expiration, volatility, interest_rate, dividend_yield, "call")[0]
-        spot2 = spot_price + coupon / 2 + barrier_shift - width_adjustment
+        spot2 = spot_price + coupon / 2 + barrier_shift 
         price2 = calculate_options_price(spot2, strike, time_to_expiration, volatility, interest_rate, dividend_yield, "call")[0]
 
         if options_style == "european":
@@ -84,19 +86,13 @@ def digital_pricer(spot_price, strike, coupon, time_to_expiration, volatility, i
             digital_price = np.subtract(price2, price1) * 2  # due to reflection principle
             theo_price = coupon * norm.cdf(-d1, 0, 1) * math.exp(-interest_rate * time_to_expiration) * 2
 
-    return digital_price, theo_price
+    return np.maximum(0,digital_price), np.maximum(0,theo_price)
 
-       
-d1 = (math.log(100 / 110) + (0.03  + (0.2 ** 2) / 2) * 0.5) / (0.2 * math.sqrt(0.5))
-d2 = d1 - 0.2 * math.sqrt(0.5) 
-X=digital_pricer(100, 110, 10, 0.5, 0.2, 0.03, 0, 0,0, "call", "american")
-Y= 10 * norm.cdf(d2, 0, 1)*math.exp(-0.03 * 0.5)*2
-print(Y)
-print(X)
+
 
 #THIS CODE IS VALIDE ONLY FOR REVERSE BARRIER UP CALL AND DOWN PUT
 
-def barrier_continous_pricer(spot_price, strike, barrier, rebate, time_to_expiration, volatility, interest_rate, dividend_yield, option_type, barrier_type, observation ):
+def barrier_option_pricer(spot_price, strike, barrier, rebate, time_to_expiration, volatility, interest_rate, dividend_yield, option_type, barrier_type, observation ):
     """
     Calculate the price of continuous barrier options.
 
@@ -178,8 +174,111 @@ def barrier_continous_pricer(spot_price, strike, barrier, rebate, time_to_expira
                 barrier_option_price = calculate_options_price(spot_price, strike, time_to_expiration, volatility, interest_rate, dividend_yield, option_type)[0] - down_in_call_price
 
 
-    return barrier_option_price
+    return np.maximum(0,barrier_option_price)
 
-pra = barrier_continous_pricer(100, 100, 80, 0, 1, 0.3, 0.02, 0, "put", "0ut", 1 )
+
+
+def binomial_european_option(spot_price, strike, interest_rate, time_to_expiration, num_steps, up_factor, down_factor, dividend_yield, option_type ):
     
-print(pra)
+    """
+Calculate the price of a European option using the binomial tree model.
+
+Parameters:
+- spot_price (float): Current stock price.
+- strike (float): Option strike price.
+- interest_rate (float): Annual risk-free interest rate.
+- time_to_expiration (float): Time to option expiration in years.
+- num_steps (int): Number of time steps in the binomial tree.
+- up_factor (float): Factor by which the stock price increases in the up state.
+- down_factor (float): Factor by which the stock price decreases in the down state.
+- dividend_yield (float): Annual dividend yield.
+- volatility (float): Annual volatility of the stock.
+- option_type (str): "call" for call option, "put" for put option.
+
+Returns:
+- option_price (float): Calculated option price.
+- terminal_stock_prices (numpy.ndarray): Array of terminal stock prices.
+"""
+    num_terminal_nodes = num_steps + 1  # Number of terminal nodes of tree
+    u = 1 + up_factor  # Expected value in the up state
+    d = 1 - down_factor  # Expected value in the down state I NEED TO DECIDE IF DIVIDE OR SUBTRACT
+    dt = time_to_expiration / float(num_steps)
+    df = np.exp(- (interest_rate - dividend_yield) * dt)
+    qu = (np.exp((interest_rate - dividend_yield) * dt) - d) / (u - d)
+    qd = 1 - qu
+    
+    # Calculate terminal stock prices-> THE RESULTS IS A VECTOR
+    terminal_stock_prices = spot_price * (u ** np.arange(num_steps, -1, -1)) * (d ** np.arange(num_steps + 1))
+    
+    #calculate payoffs
+    if option_type == "call":
+        payoffs = np.maximum(0, terminal_stock_prices - strike)
+    else:
+        payoffs = np.maximum(0, strike - terminal_stock_prices)
+        
+    #option price:
+    for _ in range(num_steps):
+        payoffs = (payoffs[:-1] * qu + payoffs[1:] * qd) * df
+
+    return payoffs[0]
+
+
+def binomial_american_option(spot_price, strike, interest_rate, time_to_expiration, num_steps, up_factor, down_factor, dividend_yield, option_type):
+    
+    """
+Calculate the price of an American option using the binomial tree model.
+
+Parameters:
+- spot_price (float): Current stock price.
+- strike (float): Option strike price.
+- interest_rate (float): Annual risk-free interest rate.
+- time_to_expiration (float): Time to option expiration in years.
+- num_steps (int): Number of time steps in the binomial tree.
+- up_factor (float): Factor by which the stock price increases in the up state.
+- down_factor (float): Factor by which the stock price decreases in the down state.
+- dividend_yield (float): Annual dividend yield.
+- volatility (float): Annual volatility of the stock.
+- option_type (str): "call" for call option, "put" for put option.
+
+Returns:
+- option_price (float): Calculated option price.
+- terminal_stock_prices (numpy.ndarray): Array of terminal stock prices.
+"""
+    
+    u = 1 + up_factor  # Expected value in the up state
+    d = 1 - down_factor  # Expected value in the down state
+    dt = time_to_expiration / float(num_steps)
+    df = np.exp(-interest_rate * dt)
+    qu = (np.exp((interest_rate - dividend_yield) * dt) - d) / (u - d)
+    qd = 1 - qu
+
+    # Initialize a 2D tree at T=0
+    terminal_stock_prices = [spot_price * (u ** np.arange(num_steps, -1, -1)) * (d ** np.arange(num_steps + 1))]
+
+    # Simulate the possible stock prices path
+    for _ in range(num_steps):
+        prev_branches = terminal_stock_prices[-1]
+        st = np.concatenate((prev_branches * u, [prev_branches[-1] * d]))
+        terminal_stock_prices.append(st)
+
+    # Compute the first payoff after appending new values to terminal_stock_prices
+    if option_type == "call":
+        payoffs = np.maximum(0, terminal_stock_prices[-1] - strike)
+    else:
+        payoffs = np.maximum(0, strike - terminal_stock_prices[-1])
+
+    # Continue the computation of payoffs and terminal_stock_prices
+    for i in range(num_steps):
+        payoffs = (payoffs[:-1] * qu + payoffs[1:] * qd) * df
+
+    # backwardation
+    for i in reversed(range(num_steps)):
+        # The payoffs from NOT exercising the option
+        payoffs = (payoffs[:-1] * qu + payoffs[1:] * qd) * df
+        # Payoffs from exercising, for American options
+        if option_type == "call":
+            payoffs = np.maximum(payoffs, terminal_stock_prices[i][: i + 1] - strike)
+        else:
+            payoffs = np.maximum(payoffs, strike - terminal_stock_prices[i][: i + 1])
+
+    return payoffs[0]
